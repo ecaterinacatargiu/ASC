@@ -1,0 +1,59 @@
+     1                                  bits 32 ; assembling for the 32 bits architecture
+     2                                  
+     3                                  ; declare the EntryPoint (a label defining the very first instruction of the program)
+     4                                  global start        
+     5                                  
+     6                                  ; declare external functions needed by our program
+     7                                  extern exit               ; tell nasm that exit exists even if we won't be defining it
+     8                                  import exit msvcrt.dll    ; exit is a function that ends the calling process. It is defined in msvcrt.dll
+     9                                                            ; msvcrt.dll contains exit, printf and all the other important C-runtime specific functions
+    10                                  
+    11                                  ; our data is declared here (the variables needed by our program)
+    12                                  
+    13                                  ;Two byte strings A and B are given. Obtain the string R by concatenating the elements of B in reverse order and the odd elements of A. 
+    14                                  ;Example:
+    15                                  ;A: 2, 1, 3, 3, 4, 2, 6
+    16                                  ;B: 4, 5, 7, 6, 2, 1
+    17                                  ;R: 1, 2, 6, 7, 5, 4, 1, 3, 3
+    18                                  
+    19                                  
+    20                                  segment data use32 class=data
+    21                                      ; ...
+    22 00000000 02010303040206              a db 2, 1, 3, 3, 4, 2, 6
+    23                                      lena equ $-a
+    24 00000007 040507060201                b db 4, 5, 7, 6, 2, 1
+    25                                      lenb equ $-b
+    26 0000000D 00<rept>                    r times lena+lenb db 0 
+    27                                  
+    28                                  ; our code starts here
+    29                                  segment code use32 class=code
+    30                                      start:
+    31 00000000 BE05000000                      mov esi, lenb - 1
+    32 00000005 B906000000                      mov ecx, lenb
+    33 0000000A BB00000000                      mov ebx, 0
+    34 0000000F E310                            jecxz skipB
+    35                                          insertB:
+    36 00000011 8A86[07000000]                      mov al, [b+esi]
+    37 00000017 8883[0D000000]                      mov [r+ebx], al
+    38 0000001D 43                                  inc ebx
+    39 0000001E 4E                                  dec esi
+    40 0000001F E2F0                            loop insertB
+    41                                          skipB
+    41          ******************       warning: label alone on a line without a colon might be in error [-w+orphan-labels]
+    42 00000021 BE00000000                      mov esi, 0
+    43 00000026 B907000000                      mov ecx, lena
+    44 0000002B E314                            jecxz skipA
+    45                                          insertA:
+    46 0000002D 8A86[00000000]                      mov al, [a+esi]
+    47 00000033 A801                                test al, 1
+    48 00000035 7407                                jz skipOdd
+    49 00000037 8883[0D000000]                      mov [r+ebx], al
+    50 0000003D 43                                  inc ebx
+    51                                              skipOdd
+    51          ******************       warning: label alone on a line without a colon might be in error [-w+orphan-labels]
+    52 0000003E 46                                  inc esi
+    53 0000003F E2EC                            loop insertA
+    54                                          skipA
+    54          ******************       warning: label alone on a line without a colon might be in error [-w+orphan-labels]
+    55 00000041 6A00                            push    dword 0      ; push the parameter for exit onto the stack
+    56 00000043 FF15[00000000]                  call    [exit]       ; call exit to terminate the program

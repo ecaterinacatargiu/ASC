@@ -1,0 +1,113 @@
+     1                                  bits 32 ; assembling for the 32 bits architecture
+     2                                  
+     3                                  ; declare the EntryPoint (a label defining the very first instruction of the program)
+     4                                  global start        
+     5                                  
+     6                                  ; declare external functions needed by our program
+     7                                  extern exit, scanf, printf,gets               ; tell nasm that exit exists even if we won't be defining it
+     8                                  extern transform
+     9                                  import exit msvcrt.dll
+    10                                  import gets msvcrt.dll
+    11                                  import scanf msvcrt.dll
+    12                                  import printf msvcrt.dll    
+    13                                  
+    14                                  
+    15                                  
+    16                                  
+    17                                  ; our data is declared here (the variables needed by our program)
+    18                                  segment data use32 class=data public
+    19                                      ; ...A string containing n binary representations on 8 bits is given as a character string.
+    20                                      ;Obtain the string containing the numbers corresponding to the given binary representations.
+    21                                      ;Example:
+    22                                      ;Given: '10100111b', '01100011b', '110b', '101011b'
+    23                                      ;Obtain: 167, 99, 6, 43
+    24                                      
+    25 00000000 313031303031313162-     	no db '10100111b','01100011b','00000110b','00101011b'
+    25 00000009 303131303030313162-
+    25 00000012 303030303031313062-
+    25 0000001B 303031303130313162 
+    26                                  	len equ $-no
+    27 00000024 00<rept>                	s times 100 db 0
+    28 00000088 6E72203D202564202C-         formatn db 'nr = %d ,',0
+    28 00000091 00                 
+    29 00000092 00000000                	counter dd 0
+    30 00000096 00                      	number db 0
+    31 00000097 00000000                	string dd 0
+    32 0000009B 00000000                    ind dd 0
+    33                                  	
+    34                                  	
+    35                                  ; our code starts here
+    36                                  segment code use32 class=code public
+    37                                      start:
+    38                                          ; ...
+    39                                      
+    40                                          ; exit(0)
+    41                                  		
+    42                                          	
+    43 00000000 B904000000              		mov ecx, 4
+    44 00000005 BE00000000              		mov esi, 0
+    45 0000000A BF00000000              		mov edi, 0
+    46 0000000F B800000000              		mov eax, 0
+    47 00000014 BA[00000000]            		mov edx, no
+    48 00000019 01F2                    		add edx, esi
+    49                                  		loopn:
+    50                                  			;push ecx
+    51                                  			
+    52 0000001B 52                      				push dword edx
+    53 0000001C E8(00000000)            				call transform
+    54 00000021 5B                      				pop ebx
+    55 00000022 83C404                  				add esp, 4*1
+    56                                  			
+    57 00000025 889F[24000000]          				mov [s+edi],bl
+    58 0000002B 47                      				inc edi
+    59 0000002C 46                      				inc esi
+    60                                  			;pop ecx
+    61                                  			
+    62                                  			
+    63                                  			;mov ecx, 7
+    64                                  			;mov ebx,0
+    65                                  			
+    66                                  			;transformNo:
+    67                                  			;	lodsb
+    68                                  			;	cmp al,0x31
+    69                                  			;	jne skip
+    70                                  			;	mov dword[ind], ecx
+    71                                  			;	push ecx
+    72                                  			;	mov ecx, [ind]
+    73                                  			;	mov al, 1
+    74                                  			;	mov dl, 2
+    75                                  			;	ridicareLaPutere:
+    76                                  			;		mul dl
+    77                                  			;	loop ridicareLaPutere
+    78                                  			;	add bl,al
+    79                                  			;	pop ecx
+    80                                  			;	skip:
+    81                                  			;loop transformNo
+    82                                  			;lodsb
+    83                                  			;cmp al,0x31
+    84                                  			;jne skip1
+    85                                  			;add bl,1
+    86                                  			;skip1:
+    87                                  			
+    88                                  			
+    89 0000002D E2EC                    		loop loopn
+    90                                  		
+    91 0000002F 89F9                    		mov ecx, edi
+    92 00000031 BF00000000              		mov edi, 0
+    93                                  		printNo:
+    94 00000036 51                      			push ecx
+    95 00000037 B800000000              			mov eax, 0
+    96 0000003C 8A87[24000000]          			mov al,[s+edi]
+    97 00000042 50                      			push dword eax
+    98 00000043 68[88000000]            			push dword formatn
+    99 00000048 FF15[00000000]          			call [printf]
+   100 0000004E 83C408                  			add esp,4*2
+   101 00000051 47                      			inc edi
+   102 00000052 59                      			pop ecx
+   103 00000053 E2E1                    		loop printNo
+   104                                  		
+   105 00000055 6A00                            push    dword 0      ; push the parameter for exit onto the stack
+   106 00000057 FF15[00000000]                  call    [exit]       ; call exit to terminate the program
+   107                                  
+   108                                  		
+   109                                  		

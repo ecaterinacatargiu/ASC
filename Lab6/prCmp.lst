@@ -1,0 +1,57 @@
+     1                                  bits 32 ; assembling for the 32 bits architecture
+     2                                  
+     3                                  ; declare the EntryPoint (a label defining the very first instruction of the program)
+     4                                  global start        
+     5                                  
+     6                                  ; declare external functions needed by our program
+     7                                  extern exit               ; tell nasm that exit exists even if we won't be defining it
+     8                                  import exit msvcrt.dll    ; exit is a function that ends the calling process. It is defined in msvcrt.dll
+     9                                                            ; msvcrt.dll contains exit, printf and all the other important C-runtime specific functions
+    10                                  
+    11                                  ; our data is declared here (the variables needed by our program)
+    12                                  segment data use32 class=data
+    13                                      ; ...
+    14 00000000 07563412153C2B1A            s dd 12345607h, 1A2B3C15h
+    15                                      lens equ ($-s)/4
+    16                                      lend equ lens*4
+    17 00000008 00<rept>                    d times lend db 0
+    18                                  
+    19                                  ; our code starts here
+    20                                  ;Given an array S of doublewords, build the array of bytes D formed from bytes of doublewords sorted as unsigned numbers in descending order.
+    21                                  ;Example:
+    22                                   ;s DD 12345607h, 1A2B3C15h
+    23                                   ;d DB 56h, 3Ch, 34h, 2Bh, 1Ah, 15h, 12h, 07h
+    24                                  segment code use32 class=code
+    25                                      start:
+    26                                          ; ...
+    27                                      
+    28                                          ; exit(0)
+    29 00000000 B908000000                      mov ecx, lend
+    30 00000005 E324                            jecxz sfarsit
+    31 00000007 BE[00000000]                    mov esi, s
+    32 0000000C FC                              cld
+    33                                          copystring:
+    34 0000000D AC                                  lodsb
+    35 0000000E 88C2                                mov dl, al
+    36 00000010 56                                  push esi
+    37 00000011 51                                  push ecx
+    38 00000012 B907000000                          mov ecx, lend-1
+    39 00000017 BF[08000000]                        mov edi, d
+    40                                              compare:
+    41 0000001C AC                                      lodsb
+    42 0000001D 38D0                                    cmp al,dl
+    43 0000001F 7201                                    jb skip
+    44 00000021 47                                      inc edi
+    45                                                  skip
+    45          ******************       warning: label alone on a line without a colon might be in error [-w+orphan-labels]
+    46 00000022 E2F8                                loop compare
+    47 00000024 59                                  pop ecx
+    48 00000025 5E                                  pop esi
+    49 00000026 4E                                  dec esi
+    50 00000027 AC                                  lodsb
+    51 00000028 AA                                  stosb
+    52 00000029 E2E2                            loop copystring
+    53                                          sfarsit
+    53          ******************       warning: label alone on a line without a colon might be in error [-w+orphan-labels]
+    54 0000002B 6A00                            push    dword 0      ; push the parameter for exit onto the stack
+    55 0000002D FF15[00000000]                  call    [exit]       ; call exit to terminate the program

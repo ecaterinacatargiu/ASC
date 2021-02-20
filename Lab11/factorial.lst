@@ -1,0 +1,16 @@
+     1                                  %ifdef _FACTORIAL_ASM_
+     2                                  %define _FACTORIAL_ASM_
+     3                                  
+     4                                  ;factorial(n) -> n!
+     5                                  factorial:
+     6                                      push ebp
+     7                                      mov ebp, esp 
+     8                                      mov eax, 1
+     9                                      mov eax, [ebp+8]
+    10                                      repeat: 
+    11                                          mul ecx
+    12                                          loop repeat
+    13                                      pop ebp
+    14                                      ret 4; stdcall convention
+    15                                      
+    16                                  %endif

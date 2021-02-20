@@ -1,0 +1,21 @@
+transformNo:
+				lodsb
+				cmp al,0x31
+				jne skip
+				mov dword[ind], ecx
+				push ecx
+				mov ecx, [ind]
+				mov al, 1
+				mov dl, 2
+				ridicareLaPutere:
+					mul dl
+				loop ridicareLaPutere
+				add bl,al
+				pop ecx
+				skip:
+			loop transformNo
+			lodsb
+			cmp al,0x31
+			jne skip1
+			add bl,1
+			skip1:

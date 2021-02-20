@@ -1,0 +1,3 @@
+﻿  main.c
+main.obj : error LNK2019: unresolved external symbol _perm referenced in function _main
+D:\An II\ASC\Lab12\Lab12\Debug\Lab12.exe : fatal error LNK1120: 1 unresolved externals

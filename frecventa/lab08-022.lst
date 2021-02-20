@@ -1,0 +1,113 @@
+     1                                  bits 32 ; assembling for the 32 bits architecture
+     2                                  
+     3                                  ; declare the EntryPoint (a label defining the very first instruction of the program)
+     4                                  global start        
+     5                                  
+     6                                  ; declare external functions needed by our program
+     7                                  extern exit,fopen,fread,fclose,printf       
+     8                                  import fopen msvcrt.dll
+     9                                  import printf msvcrt.dll
+    10                                  import fclose msvcrt.dll
+    11                                  import fread msvcrt.dll     ; tell nasm that exit exists even if we won't be defining it
+    12                                  import exit msvcrt.dll   ; exit is a function that ends the calling process. It is defined in msvcrt.dll
+    13                                                            ; msvcrt.dll contains exit, printf and all the other important C-runtime specific functions
+    14                                  
+    15                                  ; our data is declared here (the variables needed by our program)
+    16                                  segment data use32 class=data
+    17                                      ; ...
+    18 00000000 00<rept>                    sirFrecventa times 10 db 0
+    19                                      
+    20 0000000A 747874756C2E747874-         file db 'txtul.txt', 0
+    20 00000013 00                 
+    21 00000014 7200                        mod_acces db 'r', 0
+    22 00000016 00000000                    file_descriptor dd 0
+    23                                      
+    24                                      len equ 100
+    25 0000001A 00<rept>                    sir times len db 0
+    26                                      
+    27 0000007E 00                          counter db 0
+    28 0000007F 00                          maxNr db 0
+    29 00000080 00                          maxDig db 0
+    30                                      
+    31 00000081 43696672613A202564-         afiseaza db 'Cifra: %d apare de %d ori', 0
+    31 0000008A 206170617265206465-
+    31 00000093 202564206F726900   
+    32                                  ; our code starts here
+    33                                  segment code use32 class=code
+    34                                      start:
+    35                                          ; ...
+    36 00000000 68[14000000]                    push mod_acces
+    37 00000005 68[0A000000]                    push file
+    38 0000000A FF15[00000000]                  call [fopen]
+    39 00000010 83C408                          add esp, 4*2
+    40                                          
+    41                                          
+    42 00000013 83F800                          cmp eax,0
+    43 00000016 0F84A0000000                    je final
+    44 0000001C A3[16000000]                    mov [file_descriptor],eax
+    45                                          
+    46                                         citire:
+    47 00000021 FF35[16000000]                  push dword [file_descriptor]
+    48 00000027 6A64                            push dword len
+    49 00000029 6A01                            push dword 1
+    50 0000002B 68[1A000000]                    push dword sir
+    51 00000030 FF15[00000000]                  call [fread]
+    52 00000036 83C410                          add esp, 4*4
+    53                                          
+    54 00000039 83F800                          cmp eax, 0    
+    55 0000003C 7419                            je cleanup
+    56                                          
+    57 0000003E 89C1                            mov ecx,eax
+    58 00000040 BE[1A000000]                    mov esi, sir
+    59                                         frecventa:
+    60 00000045 AC                              lodsb
+    61 00000046 2C30                            sub al, '0'
+    62 00000048 6698                            cbw 
+    63 0000004A 98                              cwde
+    64 0000004B BA[00000000]                    mov edx, sirFrecventa
+    65 00000050 01C2                            add edx, eax
+    66 00000052 800201                          add [edx], byte 1
+    67 00000055 E2EE                            loop frecventa
+    68                                          
+    69                                         cleanup:
+    70                                          
+    71 00000057 C605[7F000000]00                mov [maxNr], byte 0
+    72 0000005E C605[80000000]00                mov [maxDig], byte 0
+    73 00000065 C605[7E000000]00                mov [counter], byte 0
+    74 0000006C B90A000000                      mov ecx, 10
+    75 00000071 BE[00000000]                    mov esi, sirFrecventa
+    76                                         detMax:
+    77 00000076 AC                              lodsb
+    78 00000077 3A05[7F000000]                  cmp al, [maxNr]
+    79 0000007D 7F45                            jg max
+    80                                          bucl:
+    81 0000007F 8005[7E000000]01                add [counter], byte 1
+    82                                          
+    83 00000086 E2EE                            loop detMax 
+    84                                          
+    85 00000088 FF35[16000000]                  push dword [file_descriptor]
+    86 0000008E FF15[00000000]                  call [fclose]
+    87 00000094 83C404                          add esp, 4
+    88                                          
+    89 00000097 B800000000                      mov eax, 0
+    90 0000009C A0[7F000000]                    mov al, [maxNr]
+    91 000000A1 BB00000000                      mov ebx, 0
+    92 000000A6 8A1D[80000000]                  mov bl, [maxDig]
+    93                                          
+    94 000000AC 50                              push eax
+    95 000000AD 53                              push ebx
+    96 000000AE 68[81000000]                    push dword afiseaza
+    97 000000B3 FF15[00000000]                  call [printf]
+    98 000000B9 83C40C                          add esp, 4*3
+    99                                          
+   100                                         final:
+   101 000000BC 6A00                            push    dword 0      ; push the parameter for exit onto the stack
+   102 000000BE FF15[00000000]                  call    [exit]  
+   103                                          
+   104                                         max:
+   105 000000C4 A2[7F000000]                    mov [maxNr], al
+   106 000000C9 8A1D[7E000000]                  mov bl, [counter]
+   107 000000CF 881D[80000000]                  mov [maxDig], bl
+   108 000000D5 EBA8                            jmp bucl
+   109                                          ; exit(0)
+   110                                               ; call exit to terminate the program

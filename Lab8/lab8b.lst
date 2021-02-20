@@ -1,0 +1,56 @@
+     1                                  bits 32 ; assembling for the 32 bits architecture
+     2                                  
+     3                                  ; declare the EntryPoint (a label defining the very first instruction of the program)
+     4                                  global start        
+     5                                  
+     6                                  ; declare external functions needed by our program
+     7                                  extern exit,printf,scanf             ; tell nasm that exit exists even if we won't be defining it
+     8                                  import exit msvcrt.dll    ; exit is a function that ends the calling process. It is defined in msvcrt.dll
+     9                                  import printf msvcrt.dll
+    10                                  import scanf msvcrt.dll                          ; msvcrt.dll contains exit, printf and all the other important C-runtime specific functions
+    11                                  
+    12                                  ; our data is declared here (the variables needed by our program)
+    13                                  segment data use32 class=data
+    14 00000000 00<rept>                    a TIMES 100 db 0
+    15 00000064 00000000                    len dd 0
+    16 00000068 256400                      format db "%d",0
+    17 0000006B 6C656E203D2000              mesg_len db "len = ",0
+    18 00000072 656C656D203D2000            mesg_elem db "elem = ",0
+    19 0000007A 73756D61203D2000            mesg_suma db "suma = ",0
+    20                                  
+    21                                  ; our code starts here
+    22                                  segment code use32 class=code
+    23                                      start:
+    24 00000000 BE[00000000]                    mov esi, a
+    25                                          ;printf(mesg_len)
+    26 00000005 68[6B000000]                    push mesg_len
+    27 0000000A FF15[00000000]                  call [printf]
+    28 00000010 83C404                          add esp, 4*1
+    29                                          
+    30                                          ;scanf(format, len)
+    31 00000013 68[64000000]                    push len
+    32 00000018 68[68000000]                    push format
+    33 0000001D FF15[00000000]                  call [scanf]
+    34 00000023 83C408                          add esp, 4*2
+    35                                          
+    36 00000026 8B0D[64000000]                  mov ecx, [len]
+    37 0000002C E324                            jecxz final
+    38                                          do: 
+    39 0000002E 60                                  pusha
+    40                                              ;printf(mesg_elem)
+    41 0000002F 68[72000000]                        push mesg_elem
+    42 00000034 FF15[00000000]                      call [printf]
+    43 0000003A 83C404                              add esp, 4*1
+    44                                              ;scanf(format, esi)
+    45 0000003D 56                                  push esi
+    46 0000003E 68[68000000]                        push format
+    47 00000043 FF15[00000000]                      call [scanf]
+    48 00000049 83C408                              add esp, 4*2
+    49 0000004C 61                                  popa
+    50 0000004D 83C604                              add esi, 4*1
+    51 00000050 E2DC                                loop do
+    52                                          final:
+    53                                      
+    54                                          ; exit(0)
+    55 00000052 6A00                            push    dword 0      ; push the parameter for exit onto the stack
+    56 00000054 FF15[00000000]                  call    [exit]       ; call exit to terminate the program

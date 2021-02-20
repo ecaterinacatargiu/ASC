@@ -1,0 +1,46 @@
+     1                                  bits 32 ; assembling for the 32 bits architecture
+     2                                  
+     3                                  ; declare the EntryPoint (a label defining the very first instruction of the program)
+     4                                  global start        
+     5                                  
+     6                                  ; declare external functions needed by our program
+     7                                  extern exit,printf        ; tell nasm that exit exists even if we won't be defining it
+     8                                  import exit msvcrt.dll    ; exit is a function that ends the calling process. It is defined in msvcrt.dll
+     9                                  import printf msvcrt.dll               ; msvcrt.dll contains exit, printf and all the other important C-runtime specific functions
+    10                                  
+    11                                  ; our data is declared here (the variables needed by our program)
+    12                                  segment data use32 class=data
+    13 00000000 01000000020000000A-         a dd 1,2,10,12
+    13 00000009 0000000C000000     
+    14                                      len EQU ($-a)/4
+    15 00000010 615B25645D3D256420-         format db "a[%d]=%d ",0
+    15 00000019 00                 
+    16                                  
+    17                                  ; our code starts here
+    18                                  segment code use32 class=code
+    19                                      start:
+    20 00000000 BE[00000000]                    mov ESI, a
+    21 00000005 B904000000                      mov ECX, len
+    22 0000000A FC                              CLD
+    23 0000000B E31B                            JECXZ final
+    24 0000000D BB00000000                      mov EBX, 0
+    25                                          do:
+    26 00000012 AD                                  LODSD
+    27                                              ;printf(format, ebx, eax)
+    28 00000013 60                                  pusha
+    29                                              
+    30 00000014 50                                  push EAX
+    31 00000015 53                                  push EBX
+    32 00000016 68[10000000]                        push format
+    33 0000001B FF15[00000000]                      call [printf]
+    34 00000021 83C40C                              add ESP, 4*3
+    35                                              
+    36 00000024 61                                  popa
+    37                                              
+    38 00000025 43                                  inc EBX
+    39 00000026 E2EA                            loop do
+    40                                          final:
+    41                                          
+    42                                          
+    43 00000028 6A00                            push    dword 0      ; push the parameter for exit onto the stack
+    44 0000002A FF15[00000000]                  call    [exit]       ; call exit to terminate the program

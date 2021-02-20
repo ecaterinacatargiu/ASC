@@ -1,0 +1,49 @@
+     1                                  bits 32 ; assembling for the 32 bits architecture
+     2                                  
+     3                                  ; declare the EntryPoint (a label defining the very first instruction of the program)
+     4                                  global start        
+     5                                  
+     6                                  ; declare external functions needed by our program
+     7                                  extern exit,printf               ; tell nasm that exit exists even if we won't be defining it
+     8                                  import exit msvcrt.dll    ; exit is a function that ends the calling process. It is defined in msvcrt.dll
+     9                                                            ; msvcrt.dll contains exit, printf and all the other important C-runtime specific functions
+    10                                  import printf msvcrt.dll
+    11                                  
+    12                                  ; our data is declared here (the variables needed by our program)
+    13                                  segment data use32 class=data
+    14 00000000 616E6120617265206D-         a db 'ana are mere'
+    14 00000009 657265             
+    15                                      len EQU ($-a)
+    16 0000000C 416E4120617245204D-         b db 'AnA arE MeRe'
+    16 00000015 655265             
+    17                                      len2 EQU ($-b)
+    18 00000018 4E756D626572206F66-         format db 'Number of identical elements: %d',0
+    18 00000021 206964656E74696361-
+    18 0000002A 6C20656C656D656E74-
+    18 00000033 733A20256400       
+    19                                      
+    20                                  
+    21                                  ; our code starts here
+    22                                  segment code use32 class=code
+    23                                      start:
+    24 00000000 BB00000000                      mov EBX, 0
+    25 00000005 BE[00000000]                    mov ESI, a
+    26 0000000A BF[0C000000]                    mov EDI, b
+    27 0000000F B90C000000                      mov ECX, len
+    28 00000014 FC                              CLD
+    29 00000015 E306                            jecxz final
+    30                                              do:
+    31 00000017 A6                                      CMPSB
+    32 00000018 7501                                    jne over_inc
+    33 0000001A 43                                      inc EBX
+    34                                                  over_inc: 
+    35 0000001B E2FA                                        loop do
+    36                                          final:
+    37 0000001D 53                              push EBX
+    38 0000001E 68[18000000]                    push format
+    39 00000023 FF15[00000000]                  call [printf]
+    40 00000029 83C408                          add esp, 4*2
+    41                                      
+    42                                          ; exit(0)
+    43 0000002C 6A00                            push    dword 0      ; push the parameter for exit onto the stack
+    44 0000002E FF15[00000000]                  call    [exit]       ; call exit to terminate the program
